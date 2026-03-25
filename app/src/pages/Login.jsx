@@ -51,7 +51,7 @@ const Login = () => {
         
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight text-gray-800">Real Talk Circle ⭕</h1>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-600 text-sm max-w-[250px] mx-auto text-balance leading-relaxed">
             Your private space for authentic emotional check-ins.
           </p>
         </div>
@@ -122,6 +122,10 @@ const Login = () => {
         </p>
 
       </div>
+
+      <p className="max-w-xs text-center text-[10px] text-gray-400 mt-8 px-4 leading-relaxed text-balance">
+        <strong>Disclaimer:</strong> This application is for informational purposes only. It is not medical advice nor a substitute for professional clinical treatment.
+      </p>
     </div>
   );
 };

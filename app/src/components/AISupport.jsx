@@ -5,6 +5,7 @@ import { MessageCircleHeart, Loader2 } from 'lucide-react';
 const AISupport = ({ supportUsers }) => {
   const [suggestion, setSuggestion] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchSuggestion = async () => {
@@ -47,8 +48,15 @@ const AISupport = ({ supportUsers }) => {
         )}
       </div>
       
-      <button className="w-full mt-4 bg-[var(--color-sage-dark)] hover:bg-[#6c876a] text-white py-3 rounded-xl shadow-md transition-colors font-medium">
-        Copy Message
+      <button 
+        onClick={() => {
+          navigator.clipboard.writeText(suggestion);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+        className="w-full mt-4 bg-[var(--color-sage-dark)] hover:bg-[#6c876a] text-white py-3 rounded-xl shadow-md transition-colors font-medium flex justify-center items-center gap-2"
+      >
+        {copied ? 'Copied!' : 'Copy Message'}
       </button>
     </div>
   );

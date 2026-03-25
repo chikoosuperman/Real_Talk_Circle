@@ -37,9 +37,13 @@ const Dashboard = () => {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
       const moods = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(m => m.circleId === circleId); // Filter locally instead
+        .filter(m => m.circleId === circleId) // Filter locally instead
+        .filter(m => m.timestamp && m.timestamp.toDate() >= threeDaysAgo); // Only last 3 days
       setFeed(moods);
     }, (error) => {
       console.error("Firestore Feed Error:", error);
@@ -190,12 +194,20 @@ const Dashboard = () => {
       {/* Circle Feed */}
       <section>
         <h2 className="text-xl font-bold mb-4 px-2">Circle Feed</h2>
-        <div className="space-y-4">
+        
+        {/* Render AI Support Component at top if any friends are struggling or missing */}
+        {supportUsers.length > 0 && (
+           <AISupport supportUsers={supportUsers} />
+        )}
+
+        <div className="space-y-4 className=mt-6">
           {feed.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No check-ins yet. Be the first!</p>
-          ) : (
+           ) : (
              feed.map(mood => {
-               const emoji = emojis.find(e => e.score === mood.emoji_score)?.icon || '❓';
+               const emojiObj = emojis.find(e => e.score === mood.emoji_score);
+               const emoji = emojiObj?.icon || '❓';
+               const label = emojiObj?.label || 'Unknown';
                const isAlerting = mood.emoji_score === 1; // Basic trigger for friend support
                return (
                  <div key={mood.id} className="glass-light p-4 rounded-2xl flex items-center gap-4">
@@ -206,7 +218,7 @@ const Dashboard = () => {
                        {mood.timestamp?.toDate ? new Date(mood.timestamp.toDate()).toLocaleString() : 'Just now'}
                      </p>
                    </div>
-                   <div className="text-3xl">{emoji}</div>
+                   <div className="text-3xl cursor-help" title={label}>{emoji}</div>
                    
                    {/* Friend support suggestions if someone is struggling */}
                    {isAlerting && mood.userId !== user.uid && (
@@ -219,12 +231,11 @@ const Dashboard = () => {
              })
           )}
         </div>
-        
-        {/* Render AI Support Component at bottom if any friends are struggling or missing */}
-        {supportUsers.length > 0 && (
-           <AISupport supportUsers={supportUsers} />
-        )}
       </section>
+
+      <footer className="mt-12 text-center text-[10px] text-gray-400 px-4 leading-relaxed">
+        <strong>Disclaimer:</strong> This tool is for informational purposes only. Results are not medical advice. Consult highly qualified healthcare professionals for clinical diagnosis or medical treatment.
+      </footer>
     </div>
   );
 };
