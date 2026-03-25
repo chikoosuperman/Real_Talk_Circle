@@ -22,7 +22,15 @@ const Login = () => {
         await signupWithEmail(email, password, name || 'Anonymous');
       }
     } catch (err) {
-      setError(err.message || 'Authentication failed');
+      if (err.code === 'auth/invalid-credential') {
+        setError('Incorrect email or password. Please try again.');
+      } else if (err.code === 'auth/email-already-in-use') {
+        setError('An account with this email already exists!');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password should be at least 6 characters long.');
+      } else {
+        setError(err.message || 'Authentication failed');
+      }
     } finally {
       setLoading(false);
     }

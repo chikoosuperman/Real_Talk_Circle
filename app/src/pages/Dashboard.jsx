@@ -20,9 +20,10 @@ const Dashboard = () => {
   const [supportUsers, setSupportUsers] = useState([]);
   const [dbError, setDbError] = useState(null);
 
-  // Note: For a real app, 'circleId' would be dynamic based on user membership
-  // Keeping it static 'demo-circle' for simplicity in this MVP
-  const circleId = 'demo-circle';
+  // We now read the circle ID directly from the URL (e.g., ?circle=family)
+  // If no circle is provided, we default to the standard demo-circle.
+  const searchParams = new URLSearchParams(window.location.search);
+  const circleId = searchParams.get('circle') || 'demo-circle';
 
   useEffect(() => {
     if (!user) return;
