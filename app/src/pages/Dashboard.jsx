@@ -197,7 +197,7 @@ const Dashboard = () => {
         
         {/* Render AI Support Component at top if any friends are struggling or missing */}
         {supportUsers.length > 0 && (
-           <AISupport supportUsers={supportUsers} />
+           <AISupport supportUsers={supportUsers} userId={user.uid} />
         )}
 
         <div className="space-y-4 className=mt-6">

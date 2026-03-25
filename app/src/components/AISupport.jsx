@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { suggestSupportiveMessage } from '../services/ai';
 import { MessageCircleHeart, Loader2 } from 'lucide-react';
+import { db } from '../firebase/config';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-const AISupport = ({ supportUsers }) => {
+const AISupport = ({ supportUsers, userId }) => {
   const [suggestion, setSuggestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchSuggestion = async () => {
-      if (!supportUsers || supportUsers.length === 0) return;
+      if (!supportUsers || supportUsers.length === 0 || !userId) return;
       
       setLoading(true);
       const contextItems = supportUsers.map(u => 
@@ -17,13 +19,44 @@ const AISupport = ({ supportUsers }) => {
       );
       const context = contextItems.join('. ');
       
-      const message = await suggestSupportiveMessage(context);
-      setSuggestion(message);
-      setLoading(false);
+      const todayStr = new Date().toISOString().split('T')[0];
+      const cacheKey = context;
+      
+      try {
+        const userRef = doc(db, 'users', userId);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          if (data.aiCache && data.aiCache.date === todayStr && data.aiCache.key === cacheKey) {
+             setSuggestion(data.aiCache.suggestion);
+             setLoading(false);
+             return;
+          }
+        }
+        
+        const message = await suggestSupportiveMessage(context);
+        setSuggestion(message);
+        
+        await setDoc(userRef, {
+          aiCache: {
+            date: todayStr,
+            key: cacheKey,
+            suggestion: message
+          }
+        }, { merge: true });
+
+      } catch (error) {
+        console.error("AI Cache setup error:", error);
+        const fbMessage = await suggestSupportiveMessage(context);
+        setSuggestion(fbMessage);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchSuggestion();
-  }, [supportUsers]);
+  }, [supportUsers, userId]);
 
   if (!supportUsers || supportUsers.length === 0) return null;
 
