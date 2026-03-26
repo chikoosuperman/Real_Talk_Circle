@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../firebase/config';
-import { collection, addDoc, query, orderBy, limit, onSnapshot, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { LogOut, Activity } from 'lucide-react';
 import AISupport from '../components/AISupport';
 import { analyzeEmotionalTrends } from '../services/ai';
@@ -119,14 +119,31 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setDbError(null);
-      await addDoc(collection(db, 'Moods'), {
-        userId: user.uid,
-        userName: user.displayName || 'Anonymous',
-        userPhoto: user.photoURL,
-        emoji_score: score,
-        circleId,
-        timestamp: serverTimestamp()
-      });
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const existingMood = feed.find(m => 
+        m.userId === user.uid && 
+        m.timestamp && 
+        m.timestamp.toDate() >= today
+      );
+
+      if (existingMood) {
+        await updateDoc(doc(db, 'Moods', existingMood.id), {
+          emoji_score: score,
+          timestamp: serverTimestamp()
+        });
+      } else {
+        await addDoc(collection(db, 'Moods'), {
+          userId: user.uid,
+          userName: user.displayName || 'Anonymous',
+          userPhoto: user.photoURL,
+          emoji_score: score,
+          circleId,
+          timestamp: serverTimestamp()
+        });
+      }
     } catch (error) {
       console.error("Error adding check-in: ", error);
       setDbError(`Failed to save check-in: ${error.message}`);
